@@ -14,7 +14,7 @@ export function Tree() {
             const newArray = array.filter((value, index, self) => self.indexOf(value) === index)
             newArray.sort((a, b) => a - b)
 
-            function buildTreeHelper(arr, parent) {
+            function buildTreeRecursive(arr, parent) {
                 if (arr.length === 0) return null;
                 const rootIndex = Math.floor(arr.length / 2);
                 const root = new Node(arr[rootIndex]);
@@ -22,13 +22,13 @@ export function Tree() {
                 const left = arr.slice(0, rootIndex);
                 const right = arr.slice(rootIndex + 1);
 
-                root.left = buildTreeHelper(left, root)
-                root.right = buildTreeHelper(right, root)
+                root.left = buildTreeRecursive(left, root)
+                root.right = buildTreeRecursive(right, root)
                 root.parent = parent
 
                 return root
             }
-            this.root = buildTreeHelper(newArray, null)
+            this.root = buildTreeRecursive(newArray, null)
             return this.root
         },
         insert(value) {
@@ -59,50 +59,54 @@ export function Tree() {
             return insertRecursive(value)
         },
         deleteItem(value) {
-            const foundNode = this.find(value);
-            console.log(foundNode)
-
-            if (!foundNode.left && !foundNode.right) {
-                if (foundNode.parent.left === foundNode) {
-                    console.log(`deleting ${foundNode.value}`)
-                    foundNode.parent.left = null
-                } else if (foundNode.parent.right === foundNode) {
-                    console.log(`deleting ${foundNode.value}`)
-                    foundNode.parent.right = null
-                }
-                return this
+            const targetNode = this.find(value);
+            if (!targetNode) {
+                return null
             }
-
-            if (!foundNode.left || !foundNode.right) {
-                if (foundNode.left) {
-                    foundNode.left.parent = foundNode.parent
-                    if (foundNode.parent.left === foundNode) {
-                        foundNode.parent.left = foundNode.left
-                    } else if (foundNode.parent.right === foundNode) {
-                        foundNode.parent.right = foundNode.left
+            // If node has no children
+            if (!targetNode.left && !targetNode.right) {
+                if (targetNode.parent.left === targetNode) {
+                    targetNode.parent.left = null
+                } else if (targetNode.parent.right === targetNode) {
+                    targetNode.parent.right = null
+                }
+                console.log(`deleting ${targetNode.value}`)
+                
+            }
+            // If node has only one child
+            if (!targetNode.left || !targetNode.right) {
+                if (targetNode.left) {
+                    targetNode.left.parent = targetNode.parent
+                    if (targetNode.parent.left === targetNode) {
+                        targetNode.parent.left = targetNode.left
+                    } else if (targetNode.parent.right === targetNode) {
+                        targetNode.parent.right = targetNode.left
                     }
-                } else if (foundNode.right) {
-                    foundNode.right.parent = foundNode.parent
-                    if (foundNode.parent.left === foundNode) {
-                        foundNode.parent.left = foundNode.right
-                    } else if (foundNode.parent.right === foundNode) {
-                        foundNode.parent.right = foundNode.right
+                } else if (targetNode.right) {
+                    targetNode.right.parent = targetNode.parent
+                    if (targetNode.parent.left === targetNode) {
+                        targetNode.parent.left = targetNode.right
+                    } else if (targetNode.parent.right === targetNode) {
+                        targetNode.parent.right = targetNode.right
                     }
                 }
-                return this
+                console.log(`deleting ${targetNode.value}`)
             }
-
-            if (foundNode.left && foundNode.right) {
-                let successor = foundNode.right
+            // If node has two children
+            if (targetNode.left && targetNode.right) {
+                let successor = targetNode.right
                 while (successor.left) {
                     successor = successor.left
                 }
-                foundNode.value = successor.value
-                this.deleteItem(successor.value)
-                return this
+                targetNode.value = successor.value;
+                if (successor.parent.left === successor) {
+                    successor.parent.left = successor.right;
+                } else {
+                    successor.parent.right = successor.right;
+                }
             }
 
-            return null
+            return this.root
         },
         find(value) {
             function findRecursive(current, target) {
@@ -118,37 +122,118 @@ export function Tree() {
                 if (target < current.value) {
                     return findRecursive(current.left, target)
                 } 
-                if (!current.right) {
-                    console.log(`value ${target} not found`)
-                }
+                
                 return findRecursive(current.right, target)
             }
 
             return findRecursive(this.root,value)
         },
-        levelOrder(callback) {
+        levelOrder(callback=null) {
+            // Breadth First Search
+            if (!this.root) {
+                return []
+            }
+            const queue = [this.root]
+            function levelOrderRecursive(result=[]) {
+                if (queue.length === 0) {
+                    return result
+                }
+                const current = queue.shift()
+                result.push(current.value)
 
+                if (current.left) {
+                    queue.push(current.left)
+                }
+                if (current.right) {
+                    queue.push(current.right)
+                }
+
+                return levelOrderRecursive(result)
+            }
+
+            const result = levelOrderRecursive()
+
+            if (callback) {
+                return result.map(callback)
+            }
+
+            return result
         },
         inOrder(callback) {
+            // Depth First Search
+            function inOrderRecursive(current, result=[]) {
+                if (!current) {
+                    return null
+                }
+                inOrderRecursive(current.left, result);
+                result.push(current.value);
+                inOrderRecursive(current.right, result);
 
+                return result;
+            }
+
+            const result = inOrderRecursive(this.root)
+
+            if (callback) {
+                return result.map(callback)
+            }
+
+            return result
         },
         preOrder(callback) {
+            // Depth First Search
+            function preOrderRecursive(current, result=[]) {
+                if (!current) {
+                    return null
+                }
+                result.push(current.value);
+                preOrderRecursive(current.left, result);
+                preOrderRecursive(current.right, result);
+                
+                return result;
+            }
 
+            const result = preOrderRecursive(this.root)
+
+            if (callback) {
+                return result.map(callback)
+            }
+
+            return result
         },
         postOrder(callback) {
+            // Depth First Search
+            function postOrderRecursive(current, result=[]) {
+                if (!current) {
+                    return null
+                }
+                
+                postOrderRecursive(current.left, result);
+                postOrderRecursive(current.right, result);
+                result.push(current.value);
+                
+                return result;
+            }
 
+            const result = postOrderRecursive(this.root)
+
+            if (callback) {
+                return result.map(callback)
+            }
+
+            return result
         },
         height(node) {
-            
+            console.log('WIP')
         },
         depth(node) {
-
+            console.log('WIP')
         },
         isBalanced() {
-
+            console.log('WIP')
         },
         rebalance() {
-            
+            console.log('WIP')
         }
     }
 }

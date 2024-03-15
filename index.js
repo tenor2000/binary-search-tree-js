@@ -20,6 +20,10 @@ const prettyPrint = (node, prefix = "", isLeft = true) => {
 
 prettyPrint(tree.root);
 tree.insert(66)
-tree.insert(98)
+tree.insert(10)
 console.log(tree.find(98))
 prettyPrint(tree.root);
+tree.deleteItem(8)
+prettyPrint(tree.root);
+console.log(tree.inOrder())
+console.log(tree.postOrder())
