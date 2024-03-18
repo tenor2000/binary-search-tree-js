@@ -224,16 +224,29 @@ export function Tree() {
             return result
         },
         height(node) {
-            console.log('WIP')
+            if (!node) {
+                return 0
+            }
+            return 1 + Math.max(this.height(node.left), this.height(node.right))
+
         },
         depth(node) {
-            console.log('WIP')
+            if (!node) {
+                return 0
+            }
+            if (!node.parent) {
+                return 0
+            }
+            return 1 + this.depth(node.parent)
         },
         isBalanced() {
-            console.log('WIP')
+            return Math.abs(this.height(this.root.left) - this.height(this.root.right)) <= 1
         },
         rebalance() {
-            console.log('WIP')
+            if (!this.isBalanced()) {
+                this.root = this.buildTree(this.inOrder())
+            }
+            return this
         }
     }
 }
